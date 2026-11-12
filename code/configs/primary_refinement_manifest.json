@@ -1,0 +1,120 @@
+{
+  "run": "hcp181_primary_refinement_b101",
+  "workers_per_host": 40,
+  "actual_tasks_per_host": 4,
+  "blas_threads": 1,
+  "task_budget_hours": 4,
+  "reconstruction_budget_hours": 2,
+  "checkpoint_interval_seconds": 60,
+  "diagnostic_budget_seconds": 120,
+  "periodic_progress_seconds": 7200,
+  "tasks": [
+    {
+      "id": "F01_S00025",
+      "outer_fold": 0,
+      "lambda_sel": 0.0025,
+      "lambda_g": 0.01,
+      "host": "partition_b",
+      "original_fit_seconds": 4612.909738600021,
+      "original_n_outer": 350,
+      "original_residual_state": "fail",
+      "rules": [
+        "1se_repro"
+      ]
+    },
+    {
+      "id": "F01_S0005",
+      "outer_fold": 0,
+      "lambda_sel": 0.005,
+      "lambda_g": 0.01,
+      "host": "partition_a",
+      "original_fit_seconds": 3854.3373721002135,
+      "original_n_outer": 285,
+      "original_residual_state": "unresolved",
+      "rules": [
+        "min"
+      ]
+    },
+    {
+      "id": "F02_S00025",
+      "outer_fold": 1,
+      "lambda_sel": 0.0025,
+      "lambda_g": 0.01,
+      "host": "partition_a",
+      "original_fit_seconds": 4569.555308999959,
+      "original_n_outer": 347,
+      "original_residual_state": "fail",
+      "rules": [
+        "1se_repro"
+      ]
+    },
+    {
+      "id": "F02_S0005",
+      "outer_fold": 1,
+      "lambda_sel": 0.005,
+      "lambda_g": 0.01,
+      "host": "partition_b",
+      "original_fit_seconds": 3862.1045830000658,
+      "original_n_outer": 281,
+      "original_residual_state": "unresolved",
+      "rules": [
+        "min"
+      ]
+    },
+    {
+      "id": "F03_S00025",
+      "outer_fold": 2,
+      "lambda_sel": 0.0025,
+      "lambda_g": 0.01,
+      "host": "partition_a",
+      "original_fit_seconds": 4827.328130399808,
+      "original_n_outer": 373,
+      "original_residual_state": "fail",
+      "rules": [
+        "min",
+        "1se_repro"
+      ]
+    },
+    {
+      "id": "F04_S00025",
+      "outer_fold": 3,
+      "lambda_sel": 0.0025,
+      "lambda_g": 0.01,
+      "host": "partition_b",
+      "original_fit_seconds": 4603.417662299937,
+      "original_n_outer": 345,
+      "original_residual_state": "unresolved",
+      "rules": [
+        "1se_repro"
+      ]
+    },
+    {
+      "id": "F04_S0005",
+      "outer_fold": 3,
+      "lambda_sel": 0.005,
+      "lambda_g": 0.01,
+      "host": "partition_a",
+      "original_fit_seconds": 3858.947939099977,
+      "original_n_outer": 282,
+      "original_residual_state": "unresolved",
+      "rules": [
+        "min"
+      ]
+    },
+    {
+      "id": "F05_S00025",
+      "outer_fold": 4,
+      "lambda_sel": 0.0025,
+      "lambda_g": 0.01,
+      "host": "partition_b",
+      "original_fit_seconds": 4754.2101736001205,
+      "original_n_outer": 356,
+      "original_residual_state": "fail",
+      "rules": [
+        "min",
+        "1se_repro"
+      ]
+    }
+  ],
+  "frozen_primary_results_unchanged": true
+}

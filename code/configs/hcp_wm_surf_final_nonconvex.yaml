@@ -1,0 +1,72 @@
+dataset: hcp_wm_surf_final
+preprocess:
+  space: surface
+  surface:
+    workbench: /path/to/workbench/wb_command
+    atlas_dir: data/HCP_YA_2025/standard_mesh_atlases
+    group_dir: data/HCP_YA_2025/S1200_group_average_surfaces
+    mesh: fsaverage4
+  samples: segments
+  raw_root: data/HCP_YA_2025/raw
+  out_dir: data/derived/hcp_wm_surf_final
+  subjects: all
+  smooth_fwhm_mm: 0.0
+  highpass_cutoff_s: 128.0
+  hrf_delay_s: 5.0
+  segment_trs: 8
+  bin_trs: 2
+  max_segments_per_block: 4
+  label: category
+  n_jobs: 1
+graph:
+  spatial:
+    type: mesh
+    delta: 6.0
+  temporal:
+    type: chain
+experiment:
+  name: hcp_wm_surf_final_nonconvex
+  unit: pooled
+  subjects: all
+  outer_cv:
+    type: group_kfold
+    n_splits: 5
+    group: subject
+  inner_cv:
+    type: group_kfold
+    n_splits: 3
+    group: subject
+  selection_metric: neg_log_loss
+  selection_rules:
+  - min
+  - 1se_repro
+  split_half_seed: 2029
+  repro_candidates_only: true
+  split_half_group: subject
+  n_jobs: 1
+  solver:
+    gamma: 0.001
+    max_outer: 1000
+    max_inner: 300
+    tol_obj: 1.0e-06
+    tol_x: 0.001
+    epsilon_rel: 0.1
+    apg_tol: 1.0e-06
+  save_maps: true
+  save_predictions: true
+  methods:
+  - name: nonconvex
+    model: mlrdegg
+    fixed:
+      p_s: 0.5
+      p_g: 0.5
+      eta: 0.5
+    grid:
+      lambda_sel:
+      - 0.2
+      - 0.1
+      - 0.05
+      lambda_g:
+      - 0.01
+      - 0.03
+      - 0.1

@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mlr-degg"
+version = "2.1.0"
+description = "Spatiotemporal double-exponent group-regularized multinomial brain decoding"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = [
+  "numpy>=2.0", "scipy>=1.13", "scikit-learn>=1.5", "pandas>=2.2",
+  "joblib>=1.4", "threadpoolctl>=3.5", "tqdm>=4.66", "pyyaml>=6.0"
+]
+
+[project.optional-dependencies]
+neuro = ["mne>=1.8", "nibabel>=5.2"]
+plots = ["matplotlib>=3.9"]
+dev = ["pytest>=8.0"]
+download = ["moabb>=1.1"]
+benchmark = ["cvxpy>=1.7", "clarabel>=0.11"]
+
+[project.urls]
+Repository = "https://github.com/yuzhounh/MLR-DEGG"
+
+[tool.setuptools.packages.find]
+where = ["code/src"]

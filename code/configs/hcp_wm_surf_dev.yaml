@@ -1,0 +1,132 @@
+dataset: hcp_wm_surf_dev
+preprocess:
+  space: surface
+  surface:
+    workbench: /path/to/workbench/wb_command
+    atlas_dir: data/HCP_YA_2025/standard_mesh_atlases
+    group_dir: data/HCP_YA_2025/S1200_group_average_surfaces
+    mesh: fsaverage4
+  samples: segments
+  raw_root: data/HCP_YA_2025/raw
+  out_dir: data/derived/hcp_wm_surf_dev
+  subjects: all
+  smooth_fwhm_mm: 0.0
+  highpass_cutoff_s: 128.0
+  hrf_delay_s: 5.0
+  segment_trs: 8
+  bin_trs: 2
+  max_segments_per_block: 4
+  label: category
+  n_jobs: 1
+graph:
+  spatial:
+    type: mesh
+    delta: 6.0
+  temporal:
+    type: chain
+experiment:
+  name: hcp_wm_surf_dev
+  unit: pooled
+  subjects: all
+  outer_cv:
+    type: leave_one_group_out
+    group: subject
+  inner_cv:
+    type: group_kfold
+    n_splits: 3
+    group: subject
+  selection_metric: neg_log_loss
+  selection_rules:
+  - min
+  - 1se_repro
+  split_half_seed: 2029
+  split_half_group: subject
+  n_jobs: 1
+  solver:
+    gamma: 0.001
+    max_outer: 1000
+    max_inner: 300
+    tol_obj: 1.0e-05
+    tol_x: 0.001
+    epsilon_rel: 0.1
+    apg_tol: 1.0e-06
+  save_maps: true
+  methods:
+  - name: l2_logreg
+    model: logreg_l2
+    grid:
+      C:
+      - 0.0001
+      - 0.001
+      - 0.01
+      - 0.1
+  - name: group_lasso
+    model: mlrdegg
+    fixed:
+      p_s: 1.0
+      p_g: 2.0
+      lambda_g: 0.0
+    grid:
+      lambda_sel:
+      - 0.2
+      - 0.1
+      - 0.05
+      - 0.02
+  - name: graphnet
+    model: mlrdegg
+    fixed:
+      p_s: 1.0
+      p_g: 2.0
+      eta: 0.5
+    grid:
+      lambda_sel:
+      - 0.1
+      - 0.05
+      - 0.02
+      lambda_g:
+      - 0.003
+      - 0.03
+      - 0.3
+  - name: graph_tv
+    model: mlrdegg
+    fixed:
+      p_s: 1.0
+      p_g: 1.0
+      eta: 0.5
+    grid:
+      lambda_sel:
+      - 0.1
+      - 0.05
+      - 0.02
+      lambda_g:
+      - 0.03
+      - 0.3
+  - name: graph_tv_tm
+    model: mlrdegg
+    fixed:
+      p_s: 1.0
+      p_g: 1.0
+      eta: 1.0
+    grid:
+      lambda_sel:
+      - 0.1
+      - 0.05
+      - 0.02
+      lambda_g:
+      - 0.03
+      - 0.3
+  - name: superquadratic
+    model: mlrdegg
+    fixed:
+      p_s: 1.0
+      p_g: 3.0
+      eta: 0.5
+    grid:
+      lambda_sel:
+      - 0.1
+      - 0.05
+      - 0.02
+      lambda_g:
+      - 0.003
+      - 0.03
+      - 0.3

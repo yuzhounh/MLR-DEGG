@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: Please cite this research software.
+type: software
+title: 'MLR-DEGG: spatiotemporal double-exponent group-regularized multinomial logistic
+  regression'
+version: 2.1.0
+date-released: '2026-11-12'
+license: MIT
+repository-code: https://github.com/yuzhounh/MLR-DEGG
+authors:
+- family-names: Xie
+  given-names: Xiao
+- family-names: Xia
+  given-names: Kunpeng
+- family-names: Chen
+  given-names: Yanfang
+- family-names: Cai
+  given-names: Hao
+- family-names: Xiong
+  given-names: Xingliang
+- family-names: Wang
+  given-names: Lihan
+- family-names: Zhang
+  given-names: Li
+- family-names: Wang
+  given-names: Jing

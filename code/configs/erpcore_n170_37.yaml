@@ -1,0 +1,210 @@
+dataset: erpcore_n170
+preprocess:
+  raw_root: data/ERP_CORE_N170/MNE-erpcore2021-data
+  out_dir: data/derived/erpcore_n170
+  subjects: all
+  stim_delay_s: 0.026
+  require_correct: true
+  rt_window_s:
+  - 0.2
+  - 1.0
+  bad_mad_ratio: 5.0
+  bad_sd_ratio: 50.0
+  eog_regression: true
+  l_freq: 0.1
+  h_freq: 30.0
+  epoch_tmin: -0.2
+  epoch_tmax: 0.8
+  reject_eeg_uv: 200.0
+  ar_params: data/ERP_CORE_N170/artifact_parameters.csv
+  exclusion:
+    max_artifact_fraction: 0.25
+    min_accuracy: 0.75
+    min_condition_fraction: 0.5
+  feature_tmin: 0.0
+  feature_tmax: 0.6
+  bin_width: 0.025
+  n_jobs: 1
+graph:
+  spatial:
+    type: gaussian
+    delta: 40.0
+    kappa: 70.0
+  temporal:
+    type: chain
+experiment:
+  name: erpcore_n170_37
+  unit: subject
+  subjects:
+  - 2
+  - 3
+  - 4
+  - 6
+  - 7
+  - 8
+  - 9
+  - 10
+  - 11
+  - 12
+  - 13
+  - 14
+  - 15
+  - 17
+  - 18
+  - 19
+  - 20
+  - 21
+  - 22
+  - 23
+  - 24
+  - 25
+  - 26
+  - 27
+  - 28
+  - 29
+  - 30
+  - 31
+  - 32
+  - 33
+  - 34
+  - 35
+  - 36
+  - 37
+  - 38
+  - 39
+  - 40
+  exclude_subjects:
+  - 1
+  - 5
+  - 16
+  outer_cv:
+    type: stratified_kfold
+    n_splits: 5
+    seed: 2026
+  inner_cv:
+    type: stratified_kfold
+    n_splits: 3
+    seed: 2027
+  selection_metric: neg_log_loss
+  selection_rules:
+  - min
+  - 1se_repro
+  split_half_seed: 2029
+  n_jobs: 1
+  solver:
+    gamma: 0.001
+    max_outer: 1000
+    max_inner: 300
+    tol_obj: 1.0e-06
+    tol_x: 0.001
+    epsilon_rel: 0.1
+  save_maps: true
+  methods:
+  - name: l2_logreg
+    model: logreg_l2
+    grid:
+      C:
+      - 0.0001
+      - 0.001
+      - 0.01
+      - 0.1
+  - name: group_lasso
+    model: mlrdegg
+    fixed:
+      p_s: 1.0
+      p_g: 2.0
+      lambda_g: 0.0
+    grid:
+      lambda_sel:
+      - 0.3
+      - 0.2
+      - 0.1
+      - 0.05
+  - name: graphnet
+    model: mlrdegg
+    fixed:
+      p_s: 1.0
+      p_g: 2.0
+      eta: 0.5
+    grid:
+      lambda_sel:
+      - 0.3
+      - 0.2
+      - 0.1
+      - 0.05
+      lambda_g:
+      - 0.0003
+      - 0.003
+      - 0.03
+      - 0.1
+      - 0.3
+  - name: graph_tv
+    model: mlrdegg
+    fixed:
+      p_s: 1.0
+      p_g: 1.0
+      eta: 0.5
+    grid:
+      lambda_sel:
+      - 0.3
+      - 0.2
+      - 0.1
+      - 0.05
+      lambda_g:
+      - 0.0003
+      - 0.003
+      - 0.03
+      - 0.1
+      - 0.3
+  - name: graph_tv_tm
+    model: mlrdegg
+    fixed:
+      p_s: 1.0
+      p_g: 1.0
+      eta: 1.0
+    grid:
+      lambda_sel:
+      - 0.3
+      - 0.2
+      - 0.1
+      - 0.05
+      lambda_g:
+      - 0.0003
+      - 0.003
+      - 0.03
+      - 0.1
+      - 0.3
+  - name: nonconvex
+    model: mlrdegg
+    fixed:
+      p_s: 0.5
+      p_g: 0.5
+      eta: 0.5
+    grid:
+      lambda_sel:
+      - 0.3
+      - 0.2
+      lambda_g:
+      - 0.0003
+      - 0.003
+      - 0.03
+      - 0.1
+      - 0.3
+  - name: superquadratic
+    model: mlrdegg
+    fixed:
+      p_s: 1.0
+      p_g: 3.0
+      eta: 0.5
+    grid:
+      lambda_sel:
+      - 0.3
+      - 0.2
+      - 0.1
+      - 0.05
+      lambda_g:
+      - 0.0003
+      - 0.003
+      - 0.03
+      - 0.1
+      - 0.3

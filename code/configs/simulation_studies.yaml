@@ -1,0 +1,81 @@
+base_config: code/configs/simulation_shapes.yaml
+sweep_grid: &id001
+  lambda_sel:
+  - 1.0
+  - 0.3
+  - 0.1
+  - 0.03
+  - 0.01
+  lambda_g:
+  - 0.001
+  - 0.01
+  - 0.03
+  - 0.1
+  - 0.3
+  - 1.0
+  - 3.0
+studies:
+  seeds:
+    conditions:
+    - name: base
+  members:
+    methods:
+    - graph_tv_tm
+    - nonconvex
+    conditions:
+    - name: base
+  snr:
+    methods:
+    - l2_logreg
+    - group_lasso
+    - graph_tv
+    - graphnet
+    - superquadratic
+    grid: *id001
+    conditions:
+    - name: amp0.5
+      simulation:
+        amplitude: 0.5
+    - name: amp1.0
+      simulation:
+        amplitude: 1.0
+  ntrain:
+    methods:
+    - l2_logreg
+    - group_lasso
+    - graph_tv
+    - graphnet
+    - superquadratic
+    grid: *id001
+    conditions:
+    - name: n80
+      simulation:
+        n_train: 80
+    - name: n320
+      simulation:
+        n_train: 320
+  graph:
+    methods:
+    - graph_tv
+    - graphnet
+    - superquadratic
+    grid: *id001
+    conditions:
+    - name: drop50
+      perturb:
+        kind: drop
+        fraction: 0.5
+    - name: wnoise
+      perturb:
+        kind: weight_noise
+        sigma: 1.0
+    - name: spur20
+      perturb:
+        kind: spurious
+        fraction: 0.2
+    - name: wide
+      graph:
+        spatial:
+          type: gaussian
+          delta: 1.5
+          kappa: 2.01

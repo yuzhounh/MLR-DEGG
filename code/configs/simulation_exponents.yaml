@@ -1,0 +1,154 @@
+simulation:
+  seed: 2026
+  grid:
+  - 12
+  - 12
+  - 8
+  n_time: 4
+  n_classes: 4
+  n_train: 160
+  n_val: 80
+  n_test: 400
+  blob_radius: 1.5
+  temporal_profile:
+  - 0.3
+  - 1.0
+  - 0.8
+  - 0.3
+  amplitude: 0.9
+  noise_smoothing: 1.0
+graph:
+  spatial:
+    type: gaussian
+    delta: 1.0
+    kappa: 1.01
+  temporal:
+    type: chain
+experiment:
+  name: sim_exponents
+  selection_metric: neg_log_loss
+  n_jobs: 1
+  time_limit_min: 25
+  solver:
+    gamma: 0.001
+    max_outer: 1000
+    max_inner: 300
+    tol_obj: 1.0e-06
+    tol_x: 0.001
+    epsilon_rel: 0.1
+  methods:
+  - name: l2_logreg
+    model: logreg_l2
+    grid:
+      C:
+      - 0.0001
+      - 0.001
+      - 0.01
+      - 0.1
+      - 1.0
+  - name: group_lasso
+    model: mlrdegg
+    fixed:
+      p_s: 1.0
+      p_g: 2.0
+      lambda_g: 0.0
+    grid:
+      lambda_sel:
+      - 0.3
+      - 0.1
+      - 0.03
+      - 0.01
+      - 0.003
+      - 0.001
+  - name: graph_tv
+    model: mlrdegg
+    fixed:
+      p_s: 1.0
+      p_g: 1.0
+      eta: 0.5
+    grid:
+      lambda_sel:
+      - 0.3
+      - 0.1
+      - 0.03
+      - 0.01
+      - 0.003
+      - 0.001
+      lambda_g:
+      - 0.0001
+      - 0.0003
+      - 0.001
+      - 0.003
+      - 0.01
+      - 0.03
+      - 0.1
+      - 0.3
+  - name: graph_p15
+    model: mlrdegg
+    fixed:
+      p_s: 1.0
+      p_g: 1.5
+      eta: 0.5
+    grid:
+      lambda_sel:
+      - 0.3
+      - 0.1
+      - 0.03
+      - 0.01
+      - 0.003
+      - 0.001
+      lambda_g:
+      - 0.0001
+      - 0.0003
+      - 0.001
+      - 0.003
+      - 0.01
+      - 0.03
+      - 0.1
+      - 0.3
+  - name: graphnet
+    model: mlrdegg
+    fixed:
+      p_s: 1.0
+      p_g: 2.0
+      eta: 0.5
+    grid:
+      lambda_sel:
+      - 0.3
+      - 0.1
+      - 0.03
+      - 0.01
+      - 0.003
+      - 0.001
+      lambda_g:
+      - 0.0001
+      - 0.0003
+      - 0.001
+      - 0.003
+      - 0.01
+      - 0.03
+      - 0.1
+      - 0.3
+  - name: superquadratic
+    model: mlrdegg
+    fixed:
+      p_s: 1.0
+      p_g: 3.0
+      eta: 0.5
+    grid:
+      lambda_sel:
+      - 0.3
+      - 0.1
+      - 0.03
+      - 0.01
+      - 0.003
+      - 0.001
+      lambda_g:
+      - 0.0001
+      - 0.0003
+      - 0.001
+      - 0.003
+      - 0.01
+      - 0.03
+      - 0.1
+      - 0.3

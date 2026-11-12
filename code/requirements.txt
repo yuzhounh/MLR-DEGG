@@ -1,0 +1,15 @@
+numpy>=2.0
+scipy>=1.13
+scikit-learn>=1.5
+pandas>=2.2
+matplotlib>=3.9
+joblib>=1.4
+threadpoolctl>=3.5
+tqdm>=4.66
+pyyaml>=6.0
+mne>=1.8
+nibabel>=5.2
+pytest>=8.0
+moabb>=1.1   # only for 00_download_erpcore_n170.py
+cvxpy>=1.7   # only for the B048 solver benchmark reference route M17 (tested 1.7.5)
+clarabel>=0.11   # conic solver used by M17 (tested 0.11.1)

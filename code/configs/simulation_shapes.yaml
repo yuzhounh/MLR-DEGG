@@ -1,0 +1,244 @@
+simulation:
+  layout: shapes2d
+  seed: 2026
+  grid:
+  - 32
+  - 32
+  n_time: 6
+  n_classes: 4
+  n_train: 160
+  n_val: 80
+  n_test: 400
+  temporal_profile:
+  - 0.1
+  - 0.5
+  - 1.0
+  - 0.8
+  - 0.4
+  - 0.15
+  shapes:
+  - name: disk
+    kind: disk
+    centres:
+    - - 8
+      - 8
+    radius: 4.5
+  - name: gaussian bump
+    kind: gaussian
+    centre:
+    - 8
+    - 23
+    sigma: 3.0
+    cutoff: 0.1
+  - name: bar
+    kind: bar
+    corners:
+    - - 18
+      - 3
+    - - 20
+      - 18
+    profile:
+    - 0.4
+    - 1.0
+    - 0.8
+    - 0.4
+    - 0.15
+    - 0.05
+  - name: two disks
+    kind: disk
+    centres:
+    - - 24
+      - 22
+    - - 27
+      - 28
+    radius: 2.2
+    profile:
+    - 0.0
+    - 0.1
+    - 0.5
+    - 1.0
+    - 0.8
+    - 0.4
+  amplitude: 0.7
+  noise_smoothing: 1.0
+  noise_time_smoothing: 0.8
+graph:
+  spatial:
+    type: gaussian
+    delta: 1.0
+    kappa: 1.01
+  temporal:
+    type: chain
+experiment:
+  name: sim_shapes
+  selection_metric: neg_log_loss
+  split_half: true
+  n_jobs: 1
+  time_limit_min: 25
+  solver:
+    gamma: 0.001
+    max_outer: 1000
+    max_inner: 300
+    tol_obj: 1.0e-06
+    tol_x: 0.001
+    epsilon_rel: 0.1
+  methods:
+  - name: l2_logreg
+    model: logreg_l2
+    grid:
+      C:
+      - 0.0001
+      - 0.001
+      - 0.01
+      - 0.1
+      - 1.0
+  - name: group_lasso
+    model: mlrdegg
+    fixed:
+      p_s: 1.0
+      p_g: 2.0
+      lambda_g: 0.0
+    grid:
+      lambda_sel:
+      - 1.0
+      - 0.6
+      - 0.3
+      - 0.1
+      - 0.03
+      - 0.01
+  - name: graph_tv
+    model: mlrdegg
+    fixed:
+      p_s: 1.0
+      p_g: 1.0
+      eta: 0.5
+    grid:
+      lambda_sel:
+      - 1.0
+      - 0.6
+      - 0.3
+      - 0.1
+      - 0.03
+      - 0.01
+      lambda_g:
+      - 0.001
+      - 0.003
+      - 0.01
+      - 0.03
+      - 0.1
+      - 0.3
+      - 1.0
+      - 3.0
+  - name: graph_p15
+    model: mlrdegg
+    fixed:
+      p_s: 1.0
+      p_g: 1.5
+      eta: 0.5
+    grid:
+      lambda_sel:
+      - 1.0
+      - 0.6
+      - 0.3
+      - 0.1
+      - 0.03
+      - 0.01
+      lambda_g:
+      - 0.001
+      - 0.003
+      - 0.01
+      - 0.03
+      - 0.1
+      - 0.3
+      - 1.0
+      - 3.0
+  - name: graphnet
+    model: mlrdegg
+    fixed:
+      p_s: 1.0
+      p_g: 2.0
+      eta: 0.5
+    grid:
+      lambda_sel:
+      - 1.0
+      - 0.6
+      - 0.3
+      - 0.1
+      - 0.03
+      - 0.01
+      lambda_g:
+      - 0.001
+      - 0.003
+      - 0.01
+      - 0.03
+      - 0.1
+      - 0.3
+      - 1.0
+      - 3.0
+  - name: superquadratic
+    model: mlrdegg
+    fixed:
+      p_s: 1.0
+      p_g: 3.0
+      eta: 0.5
+    grid:
+      lambda_sel:
+      - 1.0
+      - 0.6
+      - 0.3
+      - 0.1
+      - 0.03
+      - 0.01
+      lambda_g:
+      - 0.001
+      - 0.003
+      - 0.01
+      - 0.03
+      - 0.1
+      - 0.3
+      - 1.0
+      - 3.0
+  - name: graph_tv_tm
+    model: mlrdegg
+    fixed:
+      p_s: 1.0
+      p_g: 1.0
+      eta: 1.0
+    grid:
+      lambda_sel:
+      - 1.0
+      - 0.6
+      - 0.3
+      - 0.1
+      - 0.03
+      - 0.01
+      lambda_g:
+      - 0.001
+      - 0.003
+      - 0.01
+      - 0.03
+      - 0.1
+      - 0.3
+      - 1.0
+      - 3.0
+  - name: nonconvex
+    model: mlrdegg
+    fixed:
+      p_s: 0.5
+      p_g: 0.5
+      eta: 0.5
+    grid:
+      lambda_sel:
+      - 0.3
+      - 0.1
+      - 0.03
+      - 0.01
+      lambda_g:
+      - 0.001
+      - 0.003
+      - 0.01
+      - 0.03
+      - 0.1
+      - 0.3
+      - 1.0
+      - 3.0
