@@ -22,6 +22,13 @@ rules_report = importlib.import_module("09_selection_rules_report")
 ORDER = ["l2_logreg", "group_lasso", "graphnet", "graph_tv", "graph_tv_tm", "superquadratic", "nonconvex"]
 LABEL = dict(zip(ORDER, ["Ridge", "Group lasso", "GraphNet", "Graph TV", "Temporal graph TV", "Superquadratic", "Nonconvex"]))
 RULES = ["min", "1se_repro"]
+DISPLAY_RULES = ("accuracy/SD in percent and paired differences/CI in percentage points, "
+                 "two decimals; p four decimals, <0.0001 below threshold")
+
+
+def format_p(value):
+    """One table convention; the underlying corrected p-value is unchanged."""
+    return r"$<0.0001$" if value < .0001 else f"{value:.4f}"
 
 
 def split_names(frame):
@@ -135,10 +142,10 @@ def tex_rows(dataset, table, paired):
             cells = [LABEL[method]]
             for metric in metrics:
                 value = row[metric]
-                if dataset == "simulation":
+                if metric == "accuracy":
+                    cells.append(f"{100*value:.2f} ({100*row.accuracy_sd:.2f})")
+                elif dataset == "simulation":
                     cells.append("--" if method == "l2_logreg" and metric == "f1" else f"{value:.3f} ({row[metric+'_sd']:.3f})")
-                elif metric == "accuracy":
-                    cells.append(f"{100*value:.1f} ({100*row.accuracy_sd:.1f})")
                 elif metric == "graph_above_min":
                     cells.append("--" if np.isnan(value) else f"{100*value:.0f}" + r"\%")
                 elif metric == "stability":
@@ -151,15 +158,45 @@ def tex_rows(dataset, table, paired):
                     cells += ["--", "--"]
                 else:
                     t = test.iloc[0]
-                    cells += ["$" + f"{100*t['diff']:+.1f}" + "$", "$<0.001$" if t.p_holm < .001 else f"{t.p_holm:.3f}"]
+                    cells += ["$" + f"{100*t['diff']:+.2f}" + "$", format_p(t.p_holm)]
             lines.append(" & ".join(cells) + r" \\")
     return "\n".join(lines) + "\n"
+
+
+def render_saved_tables():
+    """Format frozen summaries only: no fitting, statistics, CSV writes, or plots."""
+    dest = PROJECT_ROOT / "manuscript" / "tables"
+    for dataset in ("simulation", "erp", "hcp"):
+        table = pd.read_csv(dest / f"{dataset}.csv")
+        paired = pd.read_csv(dest / f"{dataset}_tests.csv")
+        macro = dataset.title() + "TableRows"
+        (dest / f"{dataset}_rows.tex").write_text(
+            "\\newcommand{\\" + macro + "}{%\n" + tex_rows(dataset, table, paired) + "}\n",
+            encoding="utf-8")
+    hcp_report = importlib.import_module("update_hcp181_report")
+    hcp_report.render_primary(dest, dest / "inputs", summaries_only=True)
+    hcp_report.render_external(dest, pd.read_csv(dest / "external_baselines.csv"))
+    importlib.import_module("44_analyze_boundary_results").render_saved_table()
+    manifest_path = dest / "report_manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["rounding"] = DISPLAY_RULES
+    manifest["presentation_revision"] = {
+        "batch": "B126", "tables_only": True, "statistics_recomputed": False,
+        "sources": fingerprint([Path(__file__), Path(hcp_report.__file__),
+                                Path(__file__).with_name("44_analyze_boundary_results.py")])}
+    manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    print("Reformatted saved tables only; numerical result files unchanged")
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--from-archive", action="store_true")
+    parser.add_argument("--tables-only", action="store_true",
+                        help="Format existing high-precision summaries without recalculating statistics")
     args = parser.parse_args()
+    if args.tables_only:
+        render_saved_tables()
+        return
     dest = PROJECT_ROOT / "manuscript" / "tables"
     current_manifest = dest / "report_manifest.json"
     if current_manifest.exists() and json.loads(current_manifest.read_text()).get("active_hcp_run") == "hcp181_merged":
@@ -239,7 +276,7 @@ def main():
                           "hcp_accuracy": "50 participants", "hcp_other": "five folds; no fold-level tests"},
                 "SD": "ddof=1", "Holm": "per dataset/rule/metric: 6 comparisons for simulation/ERP/HCP; simulation sparse-support F1 excludes dense Ridge (5); family_size retained in CSV",
                 "SE": "pooled validation-sample SD / sqrt(N); segments may be correlated",
-                "rounding": "fixed decimal Python formatting; ERP/HCP accuracy in percent",
+                "rounding": DISPLAY_RULES,
                 "failure_policy": "reject exceptions/missing prediction outcomes; undefined all-zero-map stability uses available participant pairs with metric-specific n; unfinished fits retained with separate audit",
                 "fresh_R_quality": "ERP37: stopping records retained for ten participants; fresh-half states of the reused 27 participants remain unknown. Original six-member HCP half states unknown; HCP nonconvex states retained."}
     (dest / "report_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")

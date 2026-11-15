@@ -12,39 +12,64 @@ from mlrdegg.experiment.provenance import fingerprint, sha256
 report=importlib.import_module('paper_report')
 
 def ptex(p):
-    return '$<0.0001$' if p<.0001 else f'{p:.4f}'
+    return report.format_p(p)
 
-def render_primary(dest,inputs):
-    pa=pd.read_csv(inputs/'hcp_primary_accuracy.csv');pf=pd.read_csv(inputs/'hcp_primary_folds.csv');pt=pd.read_csv(inputs/'hcp_primary_tests.csv')
-    ps=report.summarize(pa,['accuracy']).merge(report.summarize(pf,['log_loss','stability']),on=['rule','method'],suffixes=('','_fold'))
-    ps['accuracy_pct']=100*ps.accuracy;ps['accuracy_sd_pct']=100*ps.accuracy_sd
-    ps[['rule','method','accuracy_pct','accuracy_sd_pct','log_loss','stability']].to_csv(dest/'common_grid_summary.csv',index=False)
-    pt.assign(diff_pp=100*pt['diff'],ci_low_pp=100*pt.ci_low,ci_high_pp=100*pt.ci_high).to_csv(dest/'common_grid_tests.csv',index=False)
+def render_primary(dest,inputs,summaries_only=False):
+    pf=pd.read_csv(inputs/'hcp_primary_folds.csv')
+    if summaries_only:
+        ps=pd.read_csv(dest/'common_grid_summary.csv')
+        pt=pd.read_csv(dest/'common_grid_tests.csv')
+    else:
+        pa=pd.read_csv(inputs/'hcp_primary_accuracy.csv');pt=pd.read_csv(inputs/'hcp_primary_tests.csv')
+        ps=report.summarize(pa,['accuracy']).merge(report.summarize(pf,['log_loss','stability']),on=['rule','method'],suffixes=('','_fold'))
+        ps['accuracy_pct']=100*ps.accuracy;ps['accuracy_sd_pct']=100*ps.accuracy_sd
+        ps[['rule','method','accuracy_pct','accuracy_sd_pct','log_loss','stability']].to_csv(dest/'common_grid_summary.csv',index=False)
+        pt.assign(diff_pp=100*pt['diff'],ci_low_pp=100*pt.ci_low,ci_high_pp=100*pt.ci_high).to_csv(dest/'common_grid_tests.csv',index=False)
     selected=[];mainrows=[];supprows=[]
     for rule in report.RULES:
         mainrows.append(r'\multicolumn{6}{l}{\emph{'+rule.replace('_','-')+r'} rule} \\')
+        supprows.append(r'\multicolumn{8}{l}{\emph{'+rule.replace('_','-')+r'} rule} \\')
         for method in ['group_lasso','graphnet','graph_tv','superquadratic']:
             r=ps[(ps.rule==rule)&(ps.method==method)].iloc[0]
             delta,p='--','--'
             if method!='group_lasso':
                 t=pt[(pt.rule==rule)&(pt.method==method)].iloc[0]
-                delta=f'{100*t["diff"]:.2f} ({100*t.ci_low:.2f}--{100*t.ci_high:.2f})';p=ptex(t.p_holm)
-            cells=[report.LABEL[method],f'{r.accuracy_pct:.1f} ({r.accuracy_sd_pct:.1f})',delta,p,f'{r.log_loss:.3f}',f'{r.stability:.2f}']
+                delta=f'${100*t["diff"]:+.2f}$\\newline$[{100*t.ci_low:.2f},\\,{100*t.ci_high:.2f}]$';p=ptex(t.p_holm)
+            cells=[report.LABEL[method],f'{r.accuracy_pct:.2f} ({r.accuracy_sd_pct:.2f})',delta,p,f'{r.log_loss:.3f}',f'{r.stability:.2f}']
             mainrows.append(' & '.join(cells)+r' \\')
             chosen=pf[(pf.rule==rule)&(pf.method==method)]
             params=[ast.literal_eval(s) for s in chosen.selected]
             grid=lambda key:'/'.join(f'{v:g}' for v in sorted({s[key] for s in params if key in s})) or '--'
-            lead=r'\emph{'+rule.replace('_','-')+'}' if method=='group_lasso' else ''
-            supprows.append(' & '.join([lead]+cells+[grid('lambda_sel'),grid('lambda_g')])+r' \\')
+            suppcells=[cell.replace(r'\newline',' ') for cell in cells]
+            supprows.append(' & '.join(suppcells+[grid('lambda_sel'),grid('lambda_g')])+r' \\')
             for row,pars in zip(chosen.to_dict('records'),params):
                 selected.append({'rule':rule,'method':method,'outer_fold':row['outer_fold'],**pars,
                     'numerical_stopping':row['numerical_stopping'],'iteration_limit_hit':row['iteration_limit_hit'],
                     **{key:row.get(key) for key in ['common_residual','common_residual_error_bound',
                         'common_residual_1e-03','reported_solution_source']}})
-        if rule=='min':mainrows.append(r'\midrule')
+        if rule=='min':
+            mainrows.append(r'\midrule')
+            supprows.append(r'\midrule')
     (dest/'common_grid_rows.tex').write_text('\\newcommand{\\HcpCommonRows}{%\n'+'\n'.join(mainrows)+'\n}\n')
     (dest/'common_grid_detail_rows.tex').write_text('\\newcommand{\\HcpCommonDetailRows}{%\n'+'\n'.join(supprows)+'\n}\n')
-    pd.DataFrame(selected).to_csv(dest/'common_grid_selection.csv',index=False)
+    if not summaries_only:
+        pd.DataFrame(selected).to_csv(dest/'common_grid_selection.csv',index=False)
+
+
+def render_external(dest,ext):
+    for dataset in ('ERP','HCP'):
+        rows=[r'\multicolumn{9}{l}{\emph{'+dataset+r'}} \\']
+        for name,label in [('lda_shrinkage','Shrinkage LDA'),('svm_linear','Linear SVM')]:
+            g=ext[ext.dataset.eq(dataset)&ext.baseline.eq(name)].set_index('reference')
+            r=g.loc['group_lasso'];s=g.loc['graphnet']
+            cells=[label,
+                f'{r.baseline_accuracy_pct:.2f} ({r.baseline_accuracy_sd_pct:.2f})',
+                f'${r.diff_pp:+.2f}$',f'{int(r.wins)}/{int(r.losses)}',ptex(r.p_holm),'',
+                f'${s.diff_pp:+.2f}$',f'{int(s.wins)}/{int(s.losses)}',ptex(s.p_holm)]
+            rows.append(' & '.join(cells)+r' \\')
+        macro=dataset.title()+'ExternalRows'
+        (dest/(dataset.lower()+'_external_rows.tex')).write_text(
+            '\\newcommand{\\'+macro+'}{%\n'+'\n'.join(rows)+'\n}\n',encoding='utf-8')
 
 
 def main(from_archive=False):
@@ -78,11 +103,7 @@ def main(from_archive=False):
     ext=pd.read_csv(inputs/'hcp_external_baselines.csv')
     oldext=pd.read_csv(dest/'external_baselines.csv')
     pd.concat([oldext[oldext.dataset.ne('HCP')],ext],ignore_index=True).to_csv(dest/'external_baselines.csv',index=False)
-    extrows=[]
-    for name,label in [('lda_shrinkage','Shrinkage LDA'),('svm_linear','Linear SVM')]:
-        g=ext[ext.baseline.eq(name)].set_index('reference');r=g.loc['group_lasso'];s=g.loc['graphnet']
-        extrows.append(' & '.join(['HCP' if name=='lda_shrinkage' else '',label,f'{r.baseline_accuracy_pct:.1f} ({r.baseline_accuracy_sd_pct:.1f})',f'${r.diff_pp:.2f}$',f'{int(r.wins)}/{int(r.losses)}',ptex(r.p_holm),'',f'${s.diff_pp:.2f}$',f'{int(s.wins)}/{int(s.losses)}',ptex(s.p_holm)])+r' \\')
-    (dest/'hcp_external_rows.tex').write_text('\\newcommand{\\HcpExternalRows}{%\n'+'\n'.join(extrows)+'\n}\n')
+    render_external(dest,pd.read_csv(dest/'external_baselines.csv'))
     # Update only HCP in the already-present zero-convention sensitivity, preserving ERP/simulation.
     alt=report.tests(acc,['accuracy'],'zsplit')
     zero=paired.merge(alt[['rule','method','metric','p_holm']],on=['rule','method','metric'],suffixes=('_reported','_alternative'))
@@ -96,6 +117,7 @@ def main(from_archive=False):
     manifest['fresh_R_quality']='HCP181: all recorded fresh half fits reached numerical stopping; ERP37 reused 27-participant fresh-half states remain unknown.'
     manifest['input_sha256']=fingerprint(sorted(inputs.glob('*.csv')))
     manifest['report_code_sha256']=sha256(Path(__file__))
+    manifest['rounding']=report.DISPLAY_RULES
     details=manifest.get('hcp181_reporting',{})
     details.update({'primary':'common-grid four-member comparison with accepted outer precision' if 'primary_outer_refinement' in details else 'common-grid four-member comparison',
                     'family':'method-specific seven-method comparison','no_refitting':True,

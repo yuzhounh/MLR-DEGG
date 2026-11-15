@@ -52,6 +52,8 @@ def main():
     paired.to_csv(dest / "erp_tests.csv", index=False)
     (dest / "erp_rows.tex").write_text("\\newcommand{\\ErpTableRows}{%\n" + report.tex_rows("erp", summary, paired) + "}\n", encoding="utf-8")
     replace_dataset(dest / "external_baselines.csv", pd.read_csv(out / "report/external_baselines_37.csv"), "ERP")
+    from update_hcp181_report import render_external
+    render_external(dest, pd.read_csv(dest / "external_baselines.csv"))
     alternative = report.tests(erp, ["accuracy", "R", "stability"], "zsplit")
     zero = paired.merge(alternative[["rule", "method", "metric", "p_holm"]],
                         on=["rule", "method", "metric"], suffixes=("_reported", "_alternative"))

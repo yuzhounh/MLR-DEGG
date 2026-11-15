@@ -52,8 +52,8 @@ def turbo_light() -> matplotlib.colors.Colormap:
                                             "turbo_light")
 
 
-# Sequential scale for nonnegative coefficient row norms (B101-R10).
-SEQ = plt.get_cmap("YlGnBu")
+# Author-confirmed original colour scale; keep the display data/limits unchanged.
+SEQ = turbo_light()
 LABELS = {"l2_logreg": "Ridge", "nonconvex": "Nonconvex", "group_lasso": "Group lasso", "graphnet": "GraphNet", "graph_tv": "Graph TV",
           "graph_tv_tm": "Temporal\ngraph TV", "superquadratic": "Superquadratic"}
 ERP_ROWS = ["l2_logreg", "group_lasso", "graphnet", "graph_tv", "graph_tv_tm", "superquadratic", "nonconvex"]
@@ -210,7 +210,7 @@ def main() -> None:
     ap.add_argument("--hcp-only", action="store_true", help="Update only HCP displays")
     ap.add_argument("--primary-only", action="store_true", help="Draw only the accepted four-member primary HCP fits")
     ap.add_argument("--hcp-name", default="hcp181_merged/family")
-    ap.add_argument("--cmap", help="matplotlib colormap name (default YlGnBu; turbo_light retains the historical rainbow scale)")
+    ap.add_argument("--cmap", help="matplotlib colormap name (default turbo_light)")
     ap.add_argument("--dest", help="output directory (default manuscript/figures)")
     args = ap.parse_args()
     global SEQ, DEST
