@@ -1,5 +1,6 @@
 """Prepare paper-specific sensitivity plans from local results; never launch fits."""
 import argparse
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -12,18 +13,25 @@ import yaml
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, default=Path(__file__).resolve().parent)
+    parser.add_argument('--primary-dir', type=Path, required=True,
+                        help='Original common-grid replay directory from hcp_common_grid.py')
     parser.add_argument('--phase', choices=('inner', 'half', 'refit'), required=True)
     args = parser.parse_args()
     root = args.root.resolve()
+    sys.path.insert(0, str(root/'code/scripts'))
     spec = importlib.util.spec_from_file_location('boundary_selection', root/'code/scripts/33_boundary_selection.py')
     selection = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(selection)
-    selection.ROOT = root
-    sys.path.insert(0, str(root/'code/src'))
+    from hcp_common_grid import require_original_primary
+    primary = args.primary_dir.resolve()
+    require_original_primary(primary)
+    receipt = primary/'source_receipt.json'
+    primary_id = hashlib.sha256(receipt.read_bytes()).hexdigest()
     run = root/'results/hcp181_boundary_b122'
     phase = run/args.phase
-    if phase.exists():
-        raise RuntimeError(f'Existing stage retained: {phase}')
+    plan = run/'plans'/f'{args.phase}_partition_a.json'
+    if phase.exists() or plan.exists():
+        raise RuntimeError(f'Existing stage or plan retained: {phase}')
 
     def write(path, value):
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -41,20 +49,24 @@ def main():
         return rows
 
     if args.phase == 'inner':
-        config, tasks = selection.make_plan()
+        config, tasks = selection.make_plan(primary)
         inputs = run/'inputs'
         if inputs.exists() or (run/'runtime').exists():
             raise RuntimeError('Existing inputs/runtime retained')
         inputs.mkdir(parents=True)
         (inputs/'config.yaml').write_text(yaml.safe_dump(config, sort_keys=False), encoding='utf-8')
+        write(inputs/'primary_source.json', {'receipt_sha256': primary_id})
         runtime = run/'runtime/code'
         shutil.copytree(root/'code/src', runtime/'src')
         (runtime/'scripts').mkdir()
         for name in ('_bootstrap.py', '03_run_decoding.py'):
             shutil.copy2(root/'code/scripts'/name, runtime/'scripts'/name)
     else:
+        origin = json.loads((run/'inputs/primary_source.json').read_text(encoding='utf-8'))
+        if origin['receipt_sha256'] != primary_id:
+            raise ValueError('Common-grid source changed between preparation stages')
         config = yaml.safe_load((run/'inputs/config.yaml').read_text(encoding='utf-8'))
-        rows = selection.old_rows(config)
+        rows = selection.old_rows(config, primary)
         for row in summaries('inner'):
             task = row['task']
             key = selection.identity(task['method'], task['outer_fold'], task['params'])
@@ -64,12 +76,9 @@ def main():
             tasks = selection.needed_halves(states)
         else:
             chosen = selection.select(states, summaries('half'))
-            tasks, manifest = selection.plan_refits(config, chosen)
+            tasks, manifest = selection.plan_refits(config, chosen, primary)
             write(run/'selection.json', chosen)
             write(run/'refit_manifest.json', manifest)
-    plan = run/'plans'/f'{args.phase}_partition_a.json'
-    if plan.exists():
-        raise RuntimeError(f'Existing plan retained: {plan}')
     write(plan, tasks)
     print(json.dumps({'phase': args.phase, 'tasks': len(tasks), 'plan': str(plan), 'fits_started': 0}))
 

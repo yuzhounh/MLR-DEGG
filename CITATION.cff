@@ -3,8 +3,7 @@ message: Please cite this research software.
 type: software
 title: 'MLR-DEGG: spatiotemporal double-exponent group-regularized multinomial logistic
   regression'
-version: 2.3.0
-date-released: '2026-11-15'
+version: 2.4.0.dev0
 license: MIT
 repository-code: https://github.com/yuzhounh/MLR-DEGG
 authors:

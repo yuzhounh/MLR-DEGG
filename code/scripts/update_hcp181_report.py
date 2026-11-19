@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import _bootstrap
+from paper_result_policy import original_results_active, primary_source
 from mlrdegg.paths import PROJECT_ROOT as ROOT
 from mlrdegg.experiment.provenance import fingerprint, sha256
 report=importlib.import_module('paper_report')
@@ -14,13 +15,13 @@ report=importlib.import_module('paper_report')
 def ptex(p):
     return report.format_p(p)
 
-def render_primary(dest,inputs,summaries_only=False):
-    pf=pd.read_csv(inputs/'hcp_primary_folds.csv')
+def render_primary(dest,inputs,summaries_only=False,*,prefix="hcp_"):
+    pf=pd.read_csv(inputs/f"{prefix}primary_folds.csv")
     if summaries_only:
         ps=pd.read_csv(dest/'common_grid_summary.csv')
         pt=pd.read_csv(dest/'common_grid_tests.csv')
     else:
-        pa=pd.read_csv(inputs/'hcp_primary_accuracy.csv');pt=pd.read_csv(inputs/'hcp_primary_tests.csv')
+        pa=pd.read_csv(inputs/f"{prefix}primary_accuracy.csv");pt=pd.read_csv(inputs/f"{prefix}primary_tests.csv")
         ps=report.summarize(pa,['accuracy']).merge(report.summarize(pf,['log_loss','stability']),on=['rule','method'],suffixes=('','_fold'))
         ps['accuracy_pct']=100*ps.accuracy;ps['accuracy_sd_pct']=100*ps.accuracy_sd
         ps[['rule','method','accuracy_pct','accuracy_sd_pct','log_loss','stability']].to_csv(dest/'common_grid_summary.csv',index=False)
@@ -83,14 +84,16 @@ def main(from_archive=False):
         copies={'family_accuracy.csv':'hcp_accuracy.csv','family_folds.csv':'hcp_folds.csv',
                 'primary_accuracy.csv':'hcp_primary_accuracy.csv','primary_folds.csv':'hcp_primary_folds.csv',
                 'primary_tests.csv':'hcp_primary_tests.csv','external_baselines.csv':'hcp_external_baselines.csv'}
-        for source,target in copies.items():shutil.copy2(rpt/source,inputs/target)
+        for source,target in copies.items():
+            source_dir=primary_source()/'report' if original_results_active() and source.startswith('primary_') else rpt
+            shutil.copy2(source_dir/source,inputs/target)
         shutil.copy2(rpt/'validation.json',dest/'hcp181_validation.json')
         shutil.copy2(rpt/'unfinished_rows.csv',dest/'numerical/hcp181_unfinished_rows.csv')
         for rel in list(manifest['original_result_sha256']):
             if rel.startswith('results/hcp_wm_surf'):del manifest['original_result_sha256'][rel]
         sources=[]
         for directory in ['family','primary']:
-            d=run/directory
+            d=primary_source() if directory=='primary' and original_results_active() else run/directory
             sources += [d/'config.yaml',d/'outer_results.csv',d/'inner_scores.csv',d/'units/pooled_maps.npz',d/'units/pooled_predictions.csv']
         sources += [run/'family/fresh_repro_seed5003.csv',run/'external/outer_results.csv',run/'external/test_predictions.csv']
         manifest['original_result_sha256'].update(fingerprint(sources))
@@ -119,7 +122,7 @@ def main(from_archive=False):
     manifest['report_code_sha256']=sha256(Path(__file__))
     manifest['rounding']=report.DISPLAY_RULES
     details=manifest.get('hcp181_reporting',{})
-    details.update({'primary':'common-grid four-member comparison with accepted outer precision' if 'primary_outer_refinement' in details else 'common-grid four-member comparison',
+    details.update({'primary':'common-grid four-member comparison using original stopping results' if original_results_active() else ('common-grid four-member comparison with accepted outer precision' if 'primary_outer_refinement' in details else 'common-grid four-member comparison'),
                     'family':'method-specific seven-method comparison','no_refitting':True,
                     'unfinished_outer_refits':1,'unfinished_outer_refits_scope':'historical full-family comparison'})
     manifest['hcp181_reporting']=details

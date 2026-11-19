@@ -1,11 +1,11 @@
-"""Scientific grid and one-SE selection logic, extracted without network coordination."""
-import hashlib,itertools,json,sys
-from pathlib import Path
+"""Original HCP grid and selection logic without the research coordinator."""
+import hashlib, itertools, json
+import _bootstrap
 import numpy as np
 import pandas as pd
 import yaml
-ROOT=Path(__file__).resolve().parents[2]
-RUN="hcp181_boundary_b122"
+RUN = "hcp181_boundary_b122"
+
 
 def points(m):
     g=m['grid'];keys=sorted(g)
@@ -19,8 +19,8 @@ def task(kind,m,f,p,inner=-1):
     d['id']=kind+'_'+m+'_f'+str(f)+'_'+hashlib.sha1(json.dumps(d,sort_keys=True).encode()).hexdigest()[:12]
     return d
 
-def build_initial():
-    cfg=yaml.safe_load((ROOT/'results/hcp181_merged/primary/config.yaml').read_text())
+def build_initial(primary):
+    cfg=yaml.safe_load((primary/'config.yaml').read_text())
     for m in cfg['experiment']['methods']:
         if m['name'] in ('graphnet','graph_tv'):m['grid']['lambda_g']=list(m['grid']['lambda_g'])+[.001,.003]
         if m['name']=='graph_tv':m['grid']['lambda_sel']=list(m['grid']['lambda_sel'])+[.00125]
@@ -28,8 +28,8 @@ def build_initial():
     cfg['experiment']['n_jobs']=1
     return cfg
 
-def old_rows(cfg):
-    df=pd.read_csv(ROOT/'results/hcp181_merged/primary/inner_scores.csv').fillna({'error':''})
+def old_rows(cfg, primary):
+    df=pd.read_csv(primary/'inner_scores.csv').fillna({'error':''})
     records={}
     for m in cfg['experiment']['methods']:
         for _,row in df[df.method.eq(m['name'])].iterrows():
@@ -40,8 +40,8 @@ def old_rows(cfg):
         assert len(rows)==3 and not any(r['error'] for r in rows),(k,len(rows))
     return records
 
-def make_plan():
-    cfg=build_initial();old=old_rows(cfg);tasks=[]
+def make_plan(primary):
+    cfg=build_initial(primary);old=old_rows(cfg, primary);tasks=[]
     for m in cfg['experiment']['methods']:
         for f in range(5):
             for p in points(m):
@@ -51,7 +51,6 @@ def make_plan():
     return cfg,tasks
 
 def statistics(cfg,rows):
-    sys.path.insert(0,str(ROOT/'code/src'))
     from mlrdegg.experiment.cv import _pooled
     states={}
     for m in cfg['experiment']['methods']:
@@ -94,8 +93,8 @@ def select(states,half_results):
             chosen.append(dict(method=m,outer_fold=f,rule=rule,**{k:v for k,v in win.items() if k!='key'}))
     return chosen
 
-def plan_refits(cfg,selection):
-    old=pd.read_csv(ROOT/'results/hcp181_merged/primary/outer_results.csv')
+def plan_refits(cfg,selection, primary):
+    old=pd.read_csv(primary/'outer_results.csv')
     manifest=[];pending={}
     for s in selection:
         m=s['method'];f=s['outer_fold'];p=s['params']

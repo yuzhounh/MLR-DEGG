@@ -35,6 +35,7 @@ import numpy as np
 from matplotlib.collections import PolyCollection
 
 from mlrdegg.paths import PROJECT_ROOT, RESULTS_ROOT
+from paper_result_policy import original_results_active, primary_source
 
 plt.rcParams.update({"font.family": "Arial", "pdf.fonttype": 42, "font.size": 8})
 mne.set_log_level("ERROR")
@@ -151,9 +152,9 @@ def draw_surface(ax, coords, tri, face_val, view, vmax, valid_faces) -> None:
 
 
 def hcp_figure(rule: str, name: str = "hcp181_merged/family",
-               members=None, output_name: str = "hcp_features.pdf") -> None:
+               members=None, output_name: str = "hcp_features.pdf", *, surface_dir: Path | None = None) -> None:
     res = RESULTS_ROOT / name
-    derived = PROJECT_ROOT / "data" / "derived" / "hcp_wm_surf_final"
+    derived = surface_dir or PROJECT_ROOT / "data" / "derived" / "hcp_wm_surf_final"
     space = np.load(derived / "space.npz", allow_pickle=True)
     suffix = f"@{rule}"
     members = HCP_ROWS if members is None else members
@@ -208,7 +209,9 @@ def main() -> None:
     ap.add_argument("--rule", default="1se_repro")
     ap.add_argument("--erp-only", action="store_true", help="Update ERP displays without changing HCP figures")
     ap.add_argument("--hcp-only", action="store_true", help="Update only HCP displays")
-    ap.add_argument("--primary-only", action="store_true", help="Draw only the accepted four-member primary HCP fits")
+    ap.add_argument("--primary-only", action="store_true", help="Draw only the four-member HCP fits selected by the manuscript source policy")
+    ap.add_argument("--primary-dir", type=Path, help="Completed original common-grid replay directory")
+    ap.add_argument("--surface-dir", type=Path, help="Directory with space.npz and the two inflated surfaces")
     ap.add_argument("--hcp-name", default="hcp181_merged/family")
     ap.add_argument("--cmap", help="matplotlib colormap name (default turbo_light)")
     ap.add_argument("--dest", help="output directory (default manuscript/figures)")
@@ -221,12 +224,19 @@ def main() -> None:
     if args.dest:
         DEST = Path(args.dest)
     warnings.filterwarnings("ignore", category=FutureWarning)
+    if args.primary_dir or args.surface_dir:
+        if not (args.primary_only and args.primary_dir and args.surface_dir and args.dest):
+            ap.error("--primary-dir and --surface-dir require --primary-only and an explicit --dest")
+        from hcp_common_grid import require_original_primary
+        require_original_primary(args.primary_dir)
     if args.primary_only:
         if args.erp_only:
             ap.error("--primary-only cannot be combined with --erp-only")
-        hcp_figure(args.rule, "hcp181_merged/primary",
+        if not args.primary_dir and not original_results_active():
+            ap.error("Provide --primary-dir, --surface-dir and --dest for the original common-grid figure")
+        hcp_figure(args.rule, str(args.primary_dir.resolve() if args.primary_dir else primary_source()),
                    ["group_lasso", "graphnet", "graph_tv", "superquadratic"],
-                   "hcp_primary_features.pdf")
+                   "hcp_primary_features.pdf", surface_dir=args.surface_dir)
         return
     if args.erp_only and args.hcp_only:
         ap.error("Choose at most one dataset-only option")
@@ -234,9 +244,8 @@ def main() -> None:
         erp_figure(args.rule)
     if not args.erp_only:
         hcp_figure(args.rule, args.hcp_name)
-        if args.hcp_name == "hcp181_merged/family" and (
-                RESULTS_ROOT / "hcp181_primary_refinement_b101/report_installation.json").exists():
-            hcp_figure(args.rule, "hcp181_merged/primary",
+        if args.hcp_name == "hcp181_merged/family" and original_results_active():
+            hcp_figure(args.rule, str(primary_source()),
                        ["group_lasso", "graphnet", "graph_tv", "superquadratic"],
                        "hcp_primary_features.pdf")
 
