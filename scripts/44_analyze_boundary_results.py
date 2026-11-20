@@ -9,7 +9,7 @@ import numpy as np,pandas as pd
 import _bootstrap
 from paper_result_policy import original_results_active, primary_source, boundary_source
 from hcp_common_grid import MEMBERS, check_original_metrics, paired_accuracy_tests, require_original_primary
-ROOT=Path(__file__).resolve().parents[2]
+ROOT=Path(__file__).resolve().parents[1]
 RUN=ROOT/'results/hcp181_boundary_b122'
 report=importlib.import_module('paper_report')
 

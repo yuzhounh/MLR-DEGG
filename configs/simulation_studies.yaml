@@ -1,4 +1,4 @@
-base_config: code/configs/simulation_shapes.yaml
+base_config: configs/simulation_shapes.yaml
 sweep_grid: &id001
   lambda_sel:
   - 1.0

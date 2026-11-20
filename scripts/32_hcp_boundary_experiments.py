@@ -26,7 +26,7 @@ def atomic(path, value):
     os.replace(tmp,path)
 
 def boot(run):
-    sys.path[:0] = [str(run/'runtime/code/src'),str(run/'runtime/code/scripts')]
+    sys.path[:0] = [str(run/'runtime/src'),str(run/'runtime/scripts')]
 
 def save_pickle(path, value):
     import joblib

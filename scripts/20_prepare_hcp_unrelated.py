@@ -90,8 +90,8 @@ def inspect_zip(raw_root, subject, cfg):
 
 
 def prepare():
-    cfg = _bootstrap.load_config(resolve("code/configs/hcp_wm_surf_final.yaml"))["preprocess"]
-    dev = _bootstrap.load_config(resolve("code/configs/hcp_wm_surf_dev.yaml"))["preprocess"]
+    cfg = _bootstrap.load_config(resolve("configs/hcp_wm_surf_final.yaml"))["preprocess"]
+    dev = _bootstrap.load_config(resolve("configs/hcp_wm_surf_dev.yaml"))["preprocess"]
     assert {k: v for k, v in cfg.items() if k not in ("subjects", "out_dir", "n_jobs")} == {
         k: v for k, v in dev.items() if k not in ("subjects", "out_dir", "n_jobs")}
     raw = resolve(cfg["raw_root"])

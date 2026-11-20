@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mlr-degg"
-version = "2.4.0.dev0"
+version = "1.0.0"
 description = "Spatiotemporal double-exponent group-regularized multinomial brain decoding"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -25,4 +25,4 @@ benchmark = ["cvxpy>=1.7", "clarabel>=0.11"]
 Repository = "https://github.com/yuzhounh/MLR-DEGG"
 
 [tool.setuptools.packages.find]
-where = ["code/src"]
+where = ["src"]

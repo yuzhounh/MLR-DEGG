@@ -15,8 +15,8 @@ from mlrdegg.solver_benchmark.core import (JointProx, Problem, RowFn, compensate
                                            curvature_bound, h_shift, load_instance, nonconvex_prox)
 from mlrdegg.solver_benchmark.evaluate import Evaluator, band_status, dual_lower_bound
 
-ROOT = Path(__file__).resolve().parents[2]
-CFG = yaml.safe_load(open(ROOT / "code/configs/solver_benchmark.yaml", encoding="utf-8"))
+ROOT = Path(__file__).resolve().parents[1]
+CFG = yaml.safe_load(open(ROOT / "configs/solver_benchmark.yaml", encoding="utf-8"))
 
 
 @pytest.fixture(scope="module")

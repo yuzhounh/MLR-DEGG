@@ -10,10 +10,10 @@ import shutil
 import subprocess
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 INPUT = ROOT / 'results/erpcore_n170_zero_grid_b147'
 DEST = ROOT / 'manuscript/tables/erp_zero_tables.tex'
-TEMP = ROOT / 'tmp/B147 ERP Manuscript Integration'
+TEMP = ROOT / 'tmp/erp_zero_tables'
 ORDER = ['group_lasso', 'graphnet', 'graph_tv', 'graph_tv_tm', 'superquadratic']
 LABEL = dict(zip(ORDER, ['Group lasso', 'GraphNet', 'Graph TV', 'Temporal graph TV', 'Superquadratic']))
 RULES = [('min', r'\emph{min}'), ('1se_repro', r'\emph{1se-repro}')]

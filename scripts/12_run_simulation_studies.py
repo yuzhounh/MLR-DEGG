@@ -26,7 +26,7 @@ import _bootstrap  # noqa: F401
 
 from mlrdegg.paths import PROJECT_ROOT, RESULTS_ROOT
 
-CONFIG = "code/configs/simulation_studies.yaml"
+CONFIG = "configs/simulation_studies.yaml"
 # (study, seeds, conditions or None, estimated CPU minutes at one busy core per job)
 BATCHES = [
     ("seeds", [2031, 2032], None, 160),
@@ -85,7 +85,7 @@ def main() -> int:
         _bootstrap.write_status(out / "driver_status.json", **status)
         log.info("batch %d/%d %s: elapsed %s, ETA %s (%s)", i + 1, len(todo), name, status["elapsed"],
                  status["eta"], status["expected_finish"])
-        cmd = [sys.executable, "code/scripts/10_simulation_studies.py", "--config", CONFIG, "--study", study,
+        cmd = [sys.executable, "scripts/10_simulation_studies.py", "--config", CONFIG, "--study", study,
                "--seeds", *map(str, seeds), "--name", name, "--n-jobs", str(args.n_jobs),
                "--time-limit-min", "600"]
         if conds:
@@ -97,7 +97,7 @@ def main() -> int:
         cpu_done += cpu
 
     sim3d = [r for r in SIM3D if (RESULTS_ROOT / r / "summary.csv").exists()]
-    rc = subprocess.call([sys.executable, "code/scripts/11_simulation_studies_report.py", "--config", CONFIG,
+    rc = subprocess.call([sys.executable, "scripts/11_simulation_studies_report.py", "--config", CONFIG,
                           "--sim3d", *sim3d], cwd=PROJECT_ROOT)
     if rc != 0:
         failed.append("report")

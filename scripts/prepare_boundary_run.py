@@ -12,14 +12,14 @@ import yaml
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--root', type=Path, default=Path(__file__).resolve().parent)
+    parser.add_argument('--root', type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument('--primary-dir', type=Path, required=True,
                         help='Original common-grid replay directory from hcp_common_grid.py')
     parser.add_argument('--phase', choices=('inner', 'half', 'refit'), required=True)
     args = parser.parse_args()
     root = args.root.resolve()
-    sys.path.insert(0, str(root/'code/scripts'))
-    spec = importlib.util.spec_from_file_location('boundary_selection', root/'code/scripts/33_boundary_selection.py')
+    sys.path.insert(0, str(root/'scripts'))
+    spec = importlib.util.spec_from_file_location('boundary_selection', root/'scripts/33_boundary_selection.py')
     selection = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(selection)
     from hcp_common_grid import require_original_primary
@@ -57,10 +57,10 @@ def main():
         (inputs/'config.yaml').write_text(yaml.safe_dump(config, sort_keys=False), encoding='utf-8')
         write(inputs/'primary_source.json', {'receipt_sha256': primary_id})
         runtime = run/'runtime/code'
-        shutil.copytree(root/'code/src', runtime/'src')
+        shutil.copytree(root/'src', runtime/'src')
         (runtime/'scripts').mkdir()
         for name in ('_bootstrap.py', '03_run_decoding.py'):
-            shutil.copy2(root/'code/scripts'/name, runtime/'scripts'/name)
+            shutil.copy2(root/'scripts'/name, runtime/'scripts'/name)
     else:
         origin = json.loads((run/'inputs/primary_source.json').read_text(encoding='utf-8'))
         if origin['receipt_sha256'] != primary_id:

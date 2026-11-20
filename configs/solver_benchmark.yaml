@@ -2,7 +2,7 @@ name: b048
 output_root: tmp/solver_benchmark
 cvxpy_site: null
 simulation:
-  shapes_config: code/configs/simulation_shapes.yaml
+  shapes_config: configs/simulation_shapes.yaml
   n_classes: 4
   template_fro_norm: 3.0
 scales:

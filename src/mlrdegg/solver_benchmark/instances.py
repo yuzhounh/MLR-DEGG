@@ -40,7 +40,7 @@ POINTS = {  # (p_s, p_g); p_g None: no active graph (C0 deletes the graph term)
 
 def _load_shape_patterns(project_root: Path):
     """``shape_patterns`` of the existing simulation script (reused, not reimplemented)."""
-    scripts = project_root / "code" / "scripts"
+    scripts = project_root / "scripts"
     if str(scripts) not in sys.path:
         sys.path.insert(0, str(scripts))
     spec = importlib.util.spec_from_file_location("_sim05", scripts / "05_simulation_benchmark.py")

@@ -29,8 +29,8 @@ def fingerprint(paths, root=PROJECT_ROOT):
 
 
 def run_provenance(cfg, ds, cli):
-    code = sorted((PROJECT_ROOT / "code").rglob("*.py"))
-    code += sorted((PROJECT_ROOT / "code" / "configs").glob("*.yaml"))
+    code = sorted((PROJECT_ROOT / "src").rglob("*.py")) + sorted((PROJECT_ROOT / "scripts").rglob("*.py"))
+    code += sorted((PROJECT_ROOT / "configs").glob("*.yaml"))
     inputs = Path(cfg["preprocess"]["out_dir"])
     if not inputs.is_absolute():
         inputs = PROJECT_ROOT / inputs
